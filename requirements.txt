@@ -1,0 +1,19 @@
+# Core
+PySide6>=6.5.0
+PyMuPDF>=1.23.0
+paddleocr>=2.7.0
+paddlepaddle-gpu
+
+# Database
+sqlite3-utils
+
+# Data processing
+python-dateutil
+regex
+
+# Build
+pyinstaller>=6.0.0
+
+# Dev
+pytest>=7.0.0
+black
