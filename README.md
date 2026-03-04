@@ -10,13 +10,26 @@
 - 📅 Формирование рубрики "Этот день в истории"
 - 💾 Экспорт в CSV/JSON/TXT
 
-## Установка
+## Установка Tesseract OCR
 
-### Требования
-- Python 3.11+
-- Windows 10/11
+### Windows
+1. Скачать установщик: https://github.com/UB-Mannheim/tesseract/releases
+2. Установить с опцией "Add to PATH"
+3. Проверить: `tesseract --version`
 
-### Установка зависимостей
+## Сборка .exe (GitHub Actions)
+
+Сборка происходит автоматически на GitHub при пуше:
+1. Запушь изменения: `git push origin master`
+2. Зайди на вкладку **Actions** в репозитории
+3. Скачай готовый архив с артефактами
+
+## Сборка .exe (локально)
+
+### 1. Установить Tesseract
+См. раздел выше.
+
+### 2. Установить зависимости
 
 ```bash
 pip install -r requirements.txt
