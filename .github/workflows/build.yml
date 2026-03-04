@@ -32,18 +32,7 @@ jobs:
     
     - name: Build EXE
       run: |
-        pyinstaller --clean --noconfirm `
-          --name="NewspaperArchiver" `
-          --windowed `
-          --add-data="README.md;." `
-          --hidden-import=pytesseract `
-          --hidden-import=PIL `
-          --hidden-import=PySide6 `
-          --hidden-import=PySide6.QtCore `
-          --hidden-import=PySide6.QtGui `
-          --hidden-import=PySide6.QtWidgets `
-          --collect-all PySide6 `
-          main.py
+        pyinstaller --clean --noconfirm NewspaperArchiver.spec
       
     - name: Copy Tesseract to dist
       run: |
