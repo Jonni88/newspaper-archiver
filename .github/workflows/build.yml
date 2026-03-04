@@ -38,8 +38,13 @@ jobs:
           --add-data="README.md;." `
           --hidden-import=pytesseract `
           --hidden-import=PIL `
+          --hidden-import=PySide6 `
+          --hidden-import=PySide6.QtCore `
+          --hidden-import=PySide6.QtGui `
+          --hidden-import=PySide6.QtWidgets `
+          --collect-all PySide6 `
           main.py
-    
+      
     - name: Copy Tesseract to dist
       run: |
         xcopy "C:\Program Files\Tesseract-OCR" "dist\NewspaperArchiver\tesseract" /E /I /Q
