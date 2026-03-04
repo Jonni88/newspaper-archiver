@@ -26,17 +26,14 @@ jobs:
     
     - name: Download Tesseract OCR
       run: |
-        # Скачиваем Tesseract для Windows
         Invoke-WebRequest -Uri "https://github.com/UB-Mannheim/tesseract/releases/download/v5.4.0.20240606/tesseract-ocr-w64-setup-5.4.0.20240606.exe" -OutFile "tesseract_installer.exe"
-        # Тихая установка
         Start-Process -FilePath "tesseract_installer.exe" -ArgumentList "/S" -Wait
-        # Добавляем в PATH
         echo "C:\Program Files\Tesseract-OCR" | Out-File -FilePath $env:GITHUB_PATH -Append
     
     - name: Build EXE
       run: |
         pyinstaller --clean --noconfirm `
-          --name="Архив_газет_Олекминска" `
+          --name="NewspaperArchiver" `
           --windowed `
           --add-data="README.md;." `
           --hidden-import=pytesseract `
@@ -45,19 +42,18 @@ jobs:
     
     - name: Copy Tesseract to dist
       run: |
-        # Копируем Tesseract в папку с приложением
-        xcopy "C:\Program Files\Tesseract-OCR" "dist\Архив_газет_Олекминска\tesseract" /E /I /Q
+        xcopy "C:\Program Files\Tesseract-OCR" "dist\NewspaperArchiver\tesseract" /E /I /Q
     
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Архив_газет_Олекминска-Windows
-        path: dist/Архив_газет_Олекминска/
+        name: NewspaperArchiver-Windows
+        path: dist/NewspaperArchiver/
     
     - name: Create Release
       if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v1
       with:
-        files: dist/Архив_газет_Олекминска/**
+        files: dist/NewspaperArchiver/**
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
