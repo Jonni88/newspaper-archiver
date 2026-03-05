@@ -20,8 +20,8 @@ class ExtractedEvent:
 class EventExtractor:
     """Extract events from newspaper text."""
     
-    # Keywords indicating events
-    EVENT_KEYWORDS = [
+    # Default keywords (used when no custom keywords provided)
+    DEFAULT_KEYWORDS = [
         'состоялся', 'состоялась', 'состоялись',
         'прошёл', 'прошла', 'прошло', 'прошли',
         'открылся', 'открылась', 'открытие',
@@ -34,7 +34,6 @@ class EventExtractor:
         'праздник', 'фестиваль', 'ярмарка',
         'визит', 'прибыл', 'прибыла',
         'награждение', 'премия', 'награда',
-        # Added event-related words
         'событие', 'события', 'мероприятие', 'мероприятия',
         'акция', 'провели', 'организовали', 'подвели итоги',
         'обсудили', 'решили', 'утвердили', 'подписали',
@@ -48,9 +47,11 @@ class EventExtractor:
         'сентября': 9, 'октября': 10, 'ноября': 11, 'декабря': 12,
     }
     
-    def __init__(self):
+    def __init__(self, keywords: List[str] = None):
+        """Initialize extractor with optional custom keywords."""
+        self.keywords = keywords if keywords else self.DEFAULT_KEYWORDS
         self.event_pattern = re.compile(
-            r'[^.!?]*(?:' + '|'.join(self.EVENT_KEYWORDS) + r')[^.!?]*[.!?]',
+            r'[^.!?]*(?:' + '|'.join(re.escape(k) for k in self.keywords) + r')[^.!?]*[.!?]',
             re.IGNORECASE
         )
     
@@ -77,7 +78,7 @@ class EventExtractor:
     def _contains_event_keywords(self, text: str) -> bool:
         """Check if text contains event keywords."""
         text_lower = text.lower()
-        return any(keyword in text_lower for keyword in self.EVENT_KEYWORDS)
+        return any(keyword in text_lower for keyword in self.keywords)
     
     def _parse_event(self, text: str) -> Optional[ExtractedEvent]:
         """Parse event from text."""

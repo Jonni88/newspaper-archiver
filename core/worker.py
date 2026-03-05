@@ -9,6 +9,7 @@ from db import Issue, Page, Event, Job
 from core.pdf_processor import PDFProcessor, guess_date_from_filename, guess_issue_no
 from core.ocr_processor import get_ocr_processor
 from core.event_extractor import EventExtractor
+from core.settings import Settings
 
 
 class WorkerSignals(QObject):
@@ -96,7 +97,10 @@ class PDFProcessingWorker(QRunnable):
     
     def _process_text_pdf(self, pdf_processor, issue_id, total_pages, page_repo, event_repo, job_repo):
         """Process text-based PDF."""
-        extractor = EventExtractor()
+        # Load settings and get custom keywords
+        settings = Settings()
+        keywords = settings.get_keywords()
+        extractor = EventExtractor(keywords=keywords)
         
         # Extract text from all pages
         pages_text = pdf_processor.extract_text(self.pdf_path)
@@ -142,7 +146,10 @@ class PDFProcessingWorker(QRunnable):
     def _process_scan_pdf(self, pdf_processor, issue_id, total_pages, page_repo, event_repo, job_repo):
         """Process scan PDF with OCR."""
         ocr = get_ocr_processor()
-        extractor = EventExtractor()
+        # Load settings and get custom keywords
+        settings = Settings()
+        keywords = settings.get_keywords()
+        extractor = EventExtractor(keywords=keywords)
         
         # Create temp directory for images
         with tempfile.TemporaryDirectory() as temp_dir:

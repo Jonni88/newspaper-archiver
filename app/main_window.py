@@ -13,7 +13,7 @@ from pathlib import Path
 
 from db import Database, JobRepository, IssueRepository, EventRepository
 from db import Job
-from core import PDFProcessingWorker
+from core import PDFProcessingWorker, Settings
 
 
 class MainWindow(QMainWindow):
@@ -29,6 +29,9 @@ class MainWindow(QMainWindow):
         self.job_repo = JobRepository(self.db)
         self.issue_repo = IssueRepository(self.db)
         self.event_repo = EventRepository(self.db)
+        
+        # Initialize settings
+        self.settings = Settings()
         
         # Thread pool for workers
         self.thread_pool = QThreadPool()
@@ -57,6 +60,10 @@ class MainWindow(QMainWindow):
         # Tab 3: This Day
         self.this_day_tab = self._create_this_day_tab()
         self.tabs.addTab(self.this_day_tab, "📅 Этот день")
+        
+        # Tab 4: Settings
+        self.settings_tab = self._create_settings_tab()
+        self.tabs.addTab(self.settings_tab, "⚙️ Настройки")
     
     def _create_import_tab(self):
         """Create import tab."""
@@ -202,6 +209,97 @@ class MainWindow(QMainWindow):
         layout.addLayout(btn_layout)
         
         return widget
+    
+    def _create_settings_tab(self):
+        """Create settings tab."""
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        
+        # Keywords section
+        keywords_group = QGroupBox("Ключевые слова для поиска событий")
+        keywords_layout = QVBoxLayout(keywords_group)
+        
+        # Info label
+        info_label = QLabel(
+            "Программа ищет предложения, содержащие эти слова. "
+            "Каждое слово с новой строки."
+        )
+        info_label.setWordWrap(True)
+        keywords_layout.addWidget(info_label)
+        
+        # Keywords text edit
+        self.keywords_edit = QPlainTextEdit()
+        self.keywords_edit.setPlaceholderText(
+            "состоялся\nпрошёл\nоткрылся\nсобытие\n..."
+        )
+        # Load current keywords
+        self.keywords_edit.setPlainText("\n".join(self.settings.get_keywords()))
+        keywords_layout.addWidget(self.keywords_edit)
+        
+        # Buttons
+        btn_layout = QHBoxLayout()
+        
+        self.btn_save_keywords = QPushButton("💾 Сохранить")
+        self.btn_save_keywords.clicked.connect(self._save_keywords)
+        btn_layout.addWidget(self.btn_save_keywords)
+        
+        self.btn_reset_keywords = QPushButton("🔄 Сбросить по умолчанию")
+        self.btn_reset_keywords.clicked.connect(self._reset_keywords)
+        btn_layout.addWidget(self.btn_reset_keywords)
+        
+        btn_layout.addStretch()
+        keywords_layout.addLayout(btn_layout)
+        
+        layout.addWidget(keywords_group)
+        
+        # Stats section
+        stats_group = QGroupBox("Информация")
+        stats_layout = QVBoxLayout(stats_group)
+        
+        self.settings_info_label = QLabel()
+        self._update_settings_info()
+        stats_layout.addWidget(self.settings_info_label)
+        
+        layout.addWidget(stats_group)
+        layout.addStretch()
+        
+        return widget
+    
+    def _update_settings_info(self):
+        """Update settings info label."""
+        keywords_count = len(self.settings.get_keywords())
+        self.settings_info_label.setText(
+            f"Загружено ключевых слов: {keywords_count}\n"
+            f"Файл настроек: {self.settings.config_path}"
+        )
+    
+    def _save_keywords(self):
+        """Save keywords from text edit."""
+        text = self.keywords_edit.toPlainText()
+        keywords = [line.strip() for line in text.split('\n') if line.strip()]
+        self.settings.set_keywords(keywords)
+        
+        if self.settings.save():
+            QMessageBox.information(self, "Сохранено", "Ключевые слова сохранены!")
+            self._update_settings_info()
+        else:
+            QMessageBox.warning(self, "Ошибка", "Не удалось сохранить настройки.")
+    
+    def _reset_keywords(self):
+        """Reset keywords to defaults."""
+        reply = QMessageBox.question(
+            self,
+            "Подтверждение",
+            "Сбросить ключевые слова к значениям по умолчанию?",
+            QMessageBox.Yes | QMessageBox.No
+        )
+        
+        if reply == QMessageBox.Yes:
+            self.settings.reset_keywords()
+            self.settings.save()
+            self.keywords_edit.setPlainText("\n".join(self.settings.get_keywords()))
+            self._update_settings_info()
+            QMessageBox.information(self, "Сброшено", "Ключевые слова сброшены по умолчанию.")
     
     def _create_menu(self):
         """Create menu bar."""
