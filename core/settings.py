@@ -51,8 +51,11 @@ class Settings:
         # Return defaults
         return {
             'event_keywords': self.DEFAULT_KEYWORDS.copy(),
-            'ocr_dpi': 300,  # Default DPI for better quality
-            'ocr_language': 'rus',  # Default language
+            'ocr_dpi': 300,
+            'ocr_language': 'rus',
+            'ocr_engine': 'tesseract',  # 'tesseract' or 'ai'
+            'ai_provider': 'deepseek',  # 'deepseek', 'openai', 'google'
+            'ai_api_key': '',  # API key for AI OCR
         }
     
     def save(self):
@@ -106,3 +109,27 @@ class Settings:
     def set_ocr_language(self, lang: str):
         """Set OCR language."""
         self._data['ocr_language'] = lang
+    
+    def get_ocr_engine(self) -> str:
+        """Get OCR engine (tesseract or ai)."""
+        return self._data.get('ocr_engine', 'tesseract')
+    
+    def set_ocr_engine(self, engine: str):
+        """Set OCR engine."""
+        self._data['ocr_engine'] = engine
+    
+    def get_ai_provider(self) -> str:
+        """Get AI provider."""
+        return self._data.get('ai_provider', 'deepseek')
+    
+    def set_ai_provider(self, provider: str):
+        """Set AI provider."""
+        self._data['ai_provider'] = provider
+    
+    def get_ai_api_key(self) -> str:
+        """Get AI API key."""
+        return self._data.get('ai_api_key', '')
+    
+    def set_ai_api_key(self, api_key: str):
+        """Set AI API key."""
+        self._data['ai_api_key'] = api_key

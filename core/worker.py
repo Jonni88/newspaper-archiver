@@ -8,6 +8,7 @@ from db import Database, IssueRepository, PageRepository, EventRepository, JobRe
 from db import Issue, Page, Event, Job
 from core.pdf_processor import PDFProcessor, guess_date_from_filename, guess_issue_no
 from core.ocr_processor import get_ocr_processor
+from core.ai_ocr import HybridOCRProcessor, AIOCRProcessor
 from core.event_extractor import EventExtractor
 from core.settings import Settings
 
@@ -151,7 +152,21 @@ class PDFProcessingWorker(QRunnable):
         settings = Settings()
         keywords = settings.get_keywords()
         lang = settings.get_ocr_language()
-        ocr = get_ocr_processor(lang=lang)
+        ocr_engine = settings.get_ocr_engine()
+        
+        # Initialize OCR
+        if ocr_engine == 'ai':
+            provider = settings.get_ai_provider()
+            api_key = settings.get_ai_api_key()
+            if api_key:
+                self.signals.log.emit(f"Используется AI OCR ({provider})...")
+                ocr = AIOCRProcessor(provider=provider, api_key=api_key)
+            else:
+                self.signals.log.emit("API ключ не задан, используется Tesseract")
+                ocr = get_ocr_processor(lang=lang)
+        else:
+            ocr = get_ocr_processor(lang=lang)
+        
         extractor = EventExtractor(keywords=keywords)
         
         # Create temp directory for images
@@ -169,7 +184,11 @@ class PDFProcessingWorker(QRunnable):
                 self.signals.progress.emit(i + 1, total_pages, f"OCR страница {page_no}")
                 
                 # OCR
-                text, confidence = ocr.process_image(image_path)
+                if ocr_engine == 'ai':
+                    text = ocr.image_to_text(image_path)
+                    confidence = 0.9  # Assume high confidence for AI
+                else:
+                    text, confidence = ocr.process_image(image_path)
                 
                 # Save page
                 page = Page(

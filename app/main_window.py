@@ -282,6 +282,66 @@ class MainWindow(QMainWindow):
         dpi_info.setStyleSheet("color: gray; font-size: 11px;")
         ocr_layout.addWidget(dpi_info)
         
+        # OCR Engine selection
+        engine_layout = QHBoxLayout()
+        engine_layout.addWidget(QLabel("Движок OCR:"))
+        self.engine_combo = QComboBox()
+        self.engine_combo.addItems(["Tesseract (локально)", "AI (через API)"])
+        current_engine = self.settings.get_ocr_engine()
+        self.engine_combo.setCurrentIndex(0 if current_engine == 'tesseract' else 1)
+        self.engine_combo.currentIndexChanged.connect(self._on_engine_changed)
+        engine_layout.addWidget(self.engine_combo)
+        engine_layout.addStretch()
+        ocr_layout.addLayout(engine_layout)
+        
+        # AI Settings (initially hidden if tesseract selected)
+        self.ai_group = QGroupBox("Настройки AI OCR")
+        ai_layout = QVBoxLayout(self.ai_group)
+        
+        # Provider selection
+        provider_layout = QHBoxLayout()
+        provider_layout.addWidget(QLabel("Провайдер:"))
+        self.provider_combo = QComboBox()
+        self.provider_combo.addItems(["DeepSeek", "OpenAI GPT-4", "Google Vision"])
+        providers = ['deepseek', 'openai', 'google']
+        current_provider = self.settings.get_ai_provider()
+        if current_provider in providers:
+            self.provider_combo.setCurrentIndex(providers.index(current_provider))
+        self.provider_combo.currentIndexChanged.connect(self._on_provider_changed)
+        provider_layout.addWidget(self.provider_combo)
+        provider_layout.addStretch()
+        ai_layout.addLayout(provider_layout)
+        
+        # API Key
+        api_layout = QHBoxLayout()
+        api_layout.addWidget(QLabel("API ключ:"))
+        self.api_key_edit = QLineEdit()
+        self.api_key_edit.setEchoMode(QLineEdit.Password)
+        self.api_key_edit.setText(self.settings.get_ai_api_key())
+        self.api_key_edit.setPlaceholderText("Введите API ключ...")
+        api_layout.addWidget(self.api_key_edit)
+        
+        self.btn_save_api = QPushButton("💾 Сохранить ключ")
+        self.btn_save_api.clicked.connect(self._save_api_key)
+        api_layout.addWidget(self.btn_save_api)
+        api_layout.addStretch()
+        ai_layout.addLayout(api_layout)
+        
+        # Cost info
+        cost_info = QLabel(
+            "⚠️ AI OCR требует интернет и API ключ.\n"
+            "DeepSeek: ~$0.001 за страницу\n"
+            "OpenAI: ~$0.01 за страницу\n"
+            "Google Vision: ~$0.0015 за страницу"
+        )
+        cost_info.setStyleSheet("color: gray; font-size: 11px;")
+        ai_layout.addWidget(cost_info)
+        
+        ocr_layout.addWidget(self.ai_group)
+        
+        # Show/hide AI group based on current engine
+        self.ai_group.setVisible(current_engine == 'ai')
+        
         # Language
         lang_layout = QHBoxLayout()
         lang_layout.addWidget(QLabel("Язык:"))
@@ -355,6 +415,28 @@ class MainWindow(QMainWindow):
         self.settings.set_ocr_dpi(value)
         self.dpi_label.setText(f"{value} DPI")
         self.settings.save()
+    
+    def _on_engine_changed(self, index):
+        """Handle OCR engine change."""
+        engine = 'ai' if index == 1 else 'tesseract'
+        self.settings.set_ocr_engine(engine)
+        self.settings.save()
+        self.ai_group.setVisible(engine == 'ai')
+    
+    def _on_provider_changed(self, index):
+        """Handle AI provider change."""
+        providers = ['deepseek', 'openai', 'google']
+        self.settings.set_ai_provider(providers[index])
+        self.settings.save()
+    
+    def _save_api_key(self):
+        """Save API key."""
+        api_key = self.api_key_edit.text().strip()
+        self.settings.set_ai_api_key(api_key)
+        if self.settings.save():
+            QMessageBox.information(self, "Сохранено", "API ключ сохранён!")
+        else:
+            QMessageBox.warning(self, "Ошибка", "Не удалось сохранить API ключ.")
     
     def _on_lang_changed(self, index):
         """Handle language selection change."""
