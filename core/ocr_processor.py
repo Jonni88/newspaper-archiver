@@ -97,9 +97,9 @@ class OCRProcessor:
 _ocr_instance = None
 
 
-def get_ocr_processor(lang: str = 'rus') -> OCRProcessor:
+def get_ocr_processor(lang: str = None) -> OCRProcessor:
     """Get or create OCR processor instance."""
     global _ocr_instance
-    if _ocr_instance is None:
-        _ocr_instance = OCRProcessor(lang=lang)
+    if _ocr_instance is None or (lang and _ocr_instance.lang != lang):
+        _ocr_instance = OCRProcessor(lang=lang or 'rus')
     return _ocr_instance

@@ -51,6 +51,8 @@ class Settings:
         # Return defaults
         return {
             'event_keywords': self.DEFAULT_KEYWORDS.copy(),
+            'ocr_dpi': 300,  # Default DPI for better quality
+            'ocr_language': 'rus',  # Default language
         }
     
     def save(self):
@@ -88,3 +90,19 @@ class Settings:
         keyword = keyword.strip().lower()
         if keyword in self._data['event_keywords']:
             self._data['event_keywords'].remove(keyword)
+    
+    def get_ocr_dpi(self) -> int:
+        """Get OCR DPI setting."""
+        return self._data.get('ocr_dpi', 300)
+    
+    def set_ocr_dpi(self, dpi: int):
+        """Set OCR DPI setting."""
+        self._data['ocr_dpi'] = max(150, min(600, int(dpi)))
+    
+    def get_ocr_language(self) -> str:
+        """Get OCR language."""
+        return self._data.get('ocr_language', 'rus')
+    
+    def set_ocr_language(self, lang: str):
+        """Set OCR language."""
+        self._data['ocr_language'] = lang

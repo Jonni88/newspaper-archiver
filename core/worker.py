@@ -44,7 +44,9 @@ class PDFProcessingWorker(QRunnable):
             self.signals.log.emit(f"Обработка: {self.pdf_path}")
             
             # Initialize processors
-            pdf_processor = PDFProcessor(dpi=200)
+            settings = Settings()
+            dpi = settings.get_ocr_dpi()
+            pdf_processor = PDFProcessor(dpi=dpi)
             
             # Get metadata
             self.signals.log.emit("Анализ PDF...")
@@ -145,10 +147,11 @@ class PDFProcessingWorker(QRunnable):
     
     def _process_scan_pdf(self, pdf_processor, issue_id, total_pages, page_repo, event_repo, job_repo):
         """Process scan PDF with OCR."""
-        ocr = get_ocr_processor()
-        # Load settings and get custom keywords
+        # Load settings
         settings = Settings()
         keywords = settings.get_keywords()
+        lang = settings.get_ocr_language()
+        ocr = get_ocr_processor(lang=lang)
         extractor = EventExtractor(keywords=keywords)
         
         # Create temp directory for images

@@ -252,6 +252,55 @@ class MainWindow(QMainWindow):
         
         layout.addWidget(keywords_group)
         
+        # OCR Settings section
+        ocr_group = QGroupBox("Настройки OCR (распознавание текста)")
+        ocr_layout = QVBoxLayout(ocr_group)
+        
+        # DPI slider
+        dpi_layout = QHBoxLayout()
+        dpi_layout.addWidget(QLabel("Качество (DPI):"))
+        
+        self.dpi_slider = QSpinBox()
+        self.dpi_slider.setRange(150, 600)
+        self.dpi_slider.setSingleStep(50)
+        self.dpi_slider.setValue(self.settings.get_ocr_dpi())
+        self.dpi_slider.valueChanged.connect(self._on_dpi_changed)
+        dpi_layout.addWidget(self.dpi_slider)
+        
+        self.dpi_label = QLabel(f"{self.settings.get_ocr_dpi()} DPI")
+        dpi_layout.addWidget(self.dpi_label)
+        dpi_layout.addStretch()
+        
+        ocr_layout.addLayout(dpi_layout)
+        
+        # Info about DPI
+        dpi_info = QLabel(
+            "150-200 DPI — быстро, но низкое качество\n"
+            "300 DPI — оптимально (рекомендуется)\n"
+            "400-600 DPI — медленно, но высокое качество"
+        )
+        dpi_info.setStyleSheet("color: gray; font-size: 11px;")
+        ocr_layout.addWidget(dpi_info)
+        
+        # Language
+        lang_layout = QHBoxLayout()
+        lang_layout.addWidget(QLabel("Язык:"))
+        self.lang_combo = QComboBox()
+        self.lang_combo.addItems(["rus — Русский", "eng — English", "rus+eng — Русский+English"])
+        current_lang = self.settings.get_ocr_language()
+        if current_lang == "rus":
+            self.lang_combo.setCurrentIndex(0)
+        elif current_lang == "eng":
+            self.lang_combo.setCurrentIndex(1)
+        else:
+            self.lang_combo.setCurrentIndex(2)
+        self.lang_combo.currentIndexChanged.connect(self._on_lang_changed)
+        lang_layout.addWidget(self.lang_combo)
+        lang_layout.addStretch()
+        ocr_layout.addLayout(lang_layout)
+        
+        layout.addWidget(ocr_group)
+        
         # Stats section
         stats_group = QGroupBox("Информация")
         stats_layout = QVBoxLayout(stats_group)
@@ -300,6 +349,18 @@ class MainWindow(QMainWindow):
             self.keywords_edit.setPlainText("\n".join(self.settings.get_keywords()))
             self._update_settings_info()
             QMessageBox.information(self, "Сброшено", "Ключевые слова сброшены по умолчанию.")
+    
+    def _on_dpi_changed(self, value):
+        """Handle DPI slider change."""
+        self.settings.set_ocr_dpi(value)
+        self.dpi_label.setText(f"{value} DPI")
+        self.settings.save()
+    
+    def _on_lang_changed(self, index):
+        """Handle language selection change."""
+        languages = ["rus", "eng", "rus+eng"]
+        self.settings.set_ocr_language(languages[index])
+        self.settings.save()
     
     def _create_menu(self):
         """Create menu bar."""
