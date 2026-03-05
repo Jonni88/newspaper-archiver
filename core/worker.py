@@ -9,6 +9,7 @@ from db import Issue, Page, Event, Job
 from core.pdf_processor import PDFProcessor, guess_date_from_filename, guess_issue_no
 from core.ocr_processor import get_ocr_processor
 from core.ai_ocr import HybridOCRProcessor, AIOCRProcessor
+from core.kimi_ocr import KimiOCRProcessor
 from core.event_extractor import EventExtractor
 from core.settings import Settings
 
@@ -159,8 +160,12 @@ class PDFProcessingWorker(QRunnable):
             provider = settings.get_ai_provider()
             api_key = settings.get_ai_api_key()
             if api_key:
-                self.signals.log.emit(f"Используется AI OCR ({provider})...")
-                ocr = AIOCRProcessor(provider=provider, api_key=api_key)
+                if provider == 'kimi':
+                    self.signals.log.emit(f"Используется Kimi OCR...")
+                    ocr = KimiOCRProcessor(api_key=api_key)
+                else:
+                    self.signals.log.emit(f"Используется AI OCR ({provider})...")
+                    ocr = AIOCRProcessor(provider=provider, api_key=api_key)
             else:
                 self.signals.log.emit("API ключ не задан, используется Tesseract")
                 ocr = get_ocr_processor(lang=lang)

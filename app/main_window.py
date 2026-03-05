@@ -364,8 +364,8 @@ class MainWindow(QMainWindow):
         provider_layout = QHBoxLayout()
         provider_layout.addWidget(QLabel("Провайдер:"))
         self.provider_combo = QComboBox()
-        self.provider_combo.addItems(["DeepSeek", "OpenAI GPT-4", "Google Vision"])
-        providers = ['deepseek', 'openai', 'google']
+        self.provider_combo.addItems(["DeepSeek", "OpenAI GPT-4", "Google Vision", "Kimi (Moonshot)"])
+        providers = ['deepseek', 'openai', 'google', 'kimi']
         current_provider = self.settings.get_ai_provider()
         if current_provider in providers:
             self.provider_combo.setCurrentIndex(providers.index(current_provider))
@@ -394,7 +394,8 @@ class MainWindow(QMainWindow):
             "⚠️ AI OCR требует интернет и API ключ.\n"
             "DeepSeek: ~$0.001 за страницу\n"
             "OpenAI: ~$0.01 за страницу\n"
-            "Google Vision: ~$0.0015 за страницу"
+            "Google Vision: ~$0.0015 за страницу\n"
+            "Kimi: ~$0.006 за страницу"
         )
         cost_info.setStyleSheet("color: gray; font-size: 11px;")
         ai_layout.addWidget(cost_info)

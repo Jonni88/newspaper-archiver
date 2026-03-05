@@ -54,7 +54,7 @@ class Settings:
             'ocr_dpi': 300,
             'ocr_language': 'rus',
             'ocr_engine': 'tesseract',  # 'tesseract' or 'ai'
-            'ai_provider': 'deepseek',  # 'deepseek', 'openai', 'google'
+            'ai_provider': 'deepseek',  # 'deepseek', 'openai', 'google', 'kimi'
             'ai_api_key': '',  # API key for AI OCR
         }
     
