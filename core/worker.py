@@ -159,10 +159,17 @@ class PDFProcessingWorker(QRunnable):
         # Initialize OCR
         if ocr_engine == 'advanced':
             # Advanced OCR with preprocessing and column detection
-            dpi = settings.get_ocr_dpi()
-            self.signals.log.emit(f"Используется Advanced OCR ({dpi} DPI, колонки)...")
-            advanced_ocr = AdvancedOCRProcessor(dpi=dpi, language=lang)
-            use_advanced = True
+            try:
+                dpi = settings.get_ocr_dpi()
+                self.signals.log.emit(f"Используется Advanced OCR ({dpi} DPI, колонки)...")
+                advanced_ocr = AdvancedOCRProcessor(dpi=dpi, language=lang)
+                use_advanced = True
+            except ImportError as e:
+                self.signals.log.emit(f"⚠️ Advanced OCR недоступен: {e}")
+                self.signals.log.emit("Используется обычный Tesseract")
+                self.signals.log.emit("Для Advanced OCR запустите: advanced_ocr_standalone.py")
+                ocr = get_ocr_processor(lang=lang)
+                use_advanced = False
         elif ocr_engine == 'ai':
             provider = settings.get_ai_provider()
             api_key = settings.get_ai_api_key()
