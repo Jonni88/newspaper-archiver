@@ -20,6 +20,8 @@ a = Analysis(
         'core',
         'app',
         'requests',
+        'cv2',
+        'numpy',
     ],
     hookspath=[],
     hooksconfig={},

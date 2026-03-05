@@ -53,7 +53,9 @@ class Settings:
             'event_keywords': self.DEFAULT_KEYWORDS.copy(),
             'ocr_dpi': 300,
             'ocr_language': 'rus',
-            'ocr_engine': 'tesseract',  # 'tesseract' or 'ai'
+            'ocr_engine': 'tesseract',  # 'tesseract', 'ai', or 'advanced'
+            'ocr_dpi': 350,  # DPI for advanced OCR
+            'detect_columns': True,  # Auto-detect newspaper columns
             'ai_provider': 'deepseek',  # 'deepseek', 'openai', 'google', 'kimi'
             'ai_api_key': '',  # API key for AI OCR
         }
@@ -117,6 +119,14 @@ class Settings:
     def set_ocr_engine(self, engine: str):
         """Set OCR engine."""
         self._data['ocr_engine'] = engine
+    
+    def get_detect_columns(self) -> bool:
+        """Get column detection setting."""
+        return self._data.get('detect_columns', True)
+    
+    def set_detect_columns(self, detect: bool):
+        """Set column detection."""
+        self._data['detect_columns'] = detect
     
     def get_ai_provider(self) -> str:
         """Get AI provider."""

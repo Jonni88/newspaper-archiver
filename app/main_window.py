@@ -348,9 +348,20 @@ class MainWindow(QMainWindow):
         engine_layout = QHBoxLayout()
         engine_layout.addWidget(QLabel("Движок OCR:"))
         self.engine_combo = QComboBox()
-        self.engine_combo.addItems(["Tesseract (локально)", "AI (через API)"])
+        self.engine_combo.addItems([
+            "Tesseract (локально)", 
+            "AI через API",
+            "Advanced — для газет (колонки, препроцессинг)"
+        ])
+        
         current_engine = self.settings.get_ocr_engine()
-        self.engine_combo.setCurrentIndex(0 if current_engine == 'tesseract' else 1)
+        if current_engine == 'tesseract':
+            self.engine_combo.setCurrentIndex(0)
+        elif current_engine == 'ai':
+            self.engine_combo.setCurrentIndex(1)
+        else:  # advanced
+            self.engine_combo.setCurrentIndex(2)
+        
         self.engine_combo.currentIndexChanged.connect(self._on_engine_changed)
         engine_layout.addWidget(self.engine_combo)
         engine_layout.addStretch()
@@ -481,14 +492,15 @@ class MainWindow(QMainWindow):
     
     def _on_engine_changed(self, index):
         """Handle OCR engine change."""
-        engine = 'ai' if index == 1 else 'tesseract'
+        engines = ['tesseract', 'ai', 'advanced']
+        engine = engines[index]
         self.settings.set_ocr_engine(engine)
         self.settings.save()
         self.ai_group.setVisible(engine == 'ai')
     
     def _on_provider_changed(self, index):
         """Handle AI provider change."""
-        providers = ['deepseek', 'openai', 'google']
+        providers = ['deepseek', 'openai', 'google', 'kimi']
         self.settings.set_ai_provider(providers[index])
         self.settings.save()
     

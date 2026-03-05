@@ -5,6 +5,7 @@ from .worker import PDFProcessingWorker, WorkerSignals
 from .settings import Settings
 from .ai_ocr import AIOCRProcessor, HybridOCRProcessor
 from .kimi_ocr import KimiOCRProcessor
+from .advanced_ocr import AdvancedOCRProcessor, ImagePreprocessor, ColumnDetector
 
 __all__ = [
     'PDFProcessor',
@@ -17,6 +18,9 @@ __all__ = [
     'AIOCRProcessor',
     'HybridOCRProcessor',
     'KimiOCRProcessor',
+    'AdvancedOCRProcessor',
+    'ImagePreprocessor',
+    'ColumnDetector',
     'get_ocr_processor',
     'guess_date_from_filename',
     'guess_issue_no'

@@ -10,6 +10,7 @@ from core.pdf_processor import PDFProcessor, guess_date_from_filename, guess_iss
 from core.ocr_processor import get_ocr_processor
 from core.ai_ocr import HybridOCRProcessor, AIOCRProcessor
 from core.kimi_ocr import KimiOCRProcessor
+from core.advanced_ocr import AdvancedOCRProcessor
 from core.event_extractor import EventExtractor
 from core.settings import Settings
 
@@ -156,7 +157,13 @@ class PDFProcessingWorker(QRunnable):
         ocr_engine = settings.get_ocr_engine()
         
         # Initialize OCR
-        if ocr_engine == 'ai':
+        if ocr_engine == 'advanced':
+            # Advanced OCR with preprocessing and column detection
+            dpi = settings.get_ocr_dpi()
+            self.signals.log.emit(f"Используется Advanced OCR ({dpi} DPI, колонки)...")
+            advanced_ocr = AdvancedOCRProcessor(dpi=dpi, language=lang)
+            use_advanced = True
+        elif ocr_engine == 'ai':
             provider = settings.get_ai_provider()
             api_key = settings.get_ai_api_key()
             if api_key:
@@ -169,8 +176,10 @@ class PDFProcessingWorker(QRunnable):
             else:
                 self.signals.log.emit("API ключ не задан, используется Tesseract")
                 ocr = get_ocr_processor(lang=lang)
+            use_advanced = False
         else:
             ocr = get_ocr_processor(lang=lang)
+            use_advanced = False
         
         extractor = EventExtractor(keywords=keywords)
         
@@ -189,7 +198,19 @@ class PDFProcessingWorker(QRunnable):
                 self.signals.progress.emit(i + 1, total_pages, f"OCR страница {page_no}")
                 
                 # OCR
-                if ocr_engine == 'ai':
+                if use_advanced:
+                    # Advanced OCR with preprocessing and columns
+                    page_output_dir = os.path.join(temp_dir, f"page_{page_no:03d}")
+                    os.makedirs(page_output_dir, exist_ok=True)
+                    
+                    result = advanced_ocr.process_page(image_path, page_output_dir)
+                    text = result['text']
+                    confidence = result['confidence']
+                    
+                    # Log column info
+                    self.signals.log.emit(f"  Страница {page_no}: обработано {len(result['columns'])} колонок")
+                    
+                elif ocr_engine == 'ai':
                     text = ocr.image_to_text(image_path)
                     confidence = 0.9  # Assume high confidence for AI
                 else:
