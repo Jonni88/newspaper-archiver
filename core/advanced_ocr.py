@@ -8,12 +8,19 @@ Features:
 - Text sorting by coordinates
 """
 import os
-import cv2
-import numpy as np
+import json
 from typing import List, Tuple, Optional, Dict
 from pathlib import Path
 import tempfile
-import json
+
+try:
+    import cv2
+    import numpy as np
+    CV2_AVAILABLE = True
+except ImportError:
+    CV2_AVAILABLE = False
+    print("Warning: OpenCV not installed. Advanced OCR will not work.")
+    print("Install: pip install opencv-python")
 
 
 class ImagePreprocessor:
@@ -21,6 +28,8 @@ class ImagePreprocessor:
     
     def __init__(self, target_dpi: int = 350):
         self.target_dpi = target_dpi
+        if not CV2_AVAILABLE:
+            raise ImportError("OpenCV not available. Install: pip install opencv-python")
     
     def preprocess(self, image_path: str, output_path: str = None) -> str:
         """

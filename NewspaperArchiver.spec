@@ -10,7 +10,7 @@ a = Analysis(
     hiddenimports=[
         'PySide6',
         'PySide6.QtCore',
-        'PySide6.QtGui', 
+        'PySide6.QtGui',
         'PySide6.QtWidgets',
         'pytesseract',
         'PIL',
@@ -21,6 +21,7 @@ a = Analysis(
         'app',
         'requests',
         'cv2',
+        'cv2.cv2',
         'numpy',
     ],
     hookspath=[],
