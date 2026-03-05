@@ -10,10 +10,12 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QThreadPool
 from PySide6.QtGui import QAction
 from pathlib import Path
+from datetime import datetime
 
 from db import Database, JobRepository, IssueRepository, EventRepository
 from db import Job
 from core import PDFProcessingWorker, Settings
+from core.monthly_report import MonthlyReportGenerator
 
 
 class MainWindow(QMainWindow):
@@ -61,7 +63,11 @@ class MainWindow(QMainWindow):
         self.this_day_tab = self._create_this_day_tab()
         self.tabs.addTab(self.this_day_tab, "📅 Этот день")
         
-        # Tab 4: Settings
+        # Tab 4: This Month
+        self.this_month_tab = self._create_this_month_tab()
+        self.tabs.addTab(self.this_month_tab, "📰 Этот месяц")
+        
+        # Tab 5: Settings
         self.settings_tab = self._create_settings_tab()
         self.tabs.addTab(self.settings_tab, "⚙️ Настройки")
     
@@ -204,6 +210,62 @@ class MainWindow(QMainWindow):
         self.btn_save_this_day = QPushButton("💾 Сохранить в файл")
         self.btn_save_this_day.clicked.connect(self._save_this_day)
         btn_layout.addWidget(self.btn_save_this_day)
+        
+        btn_layout.addStretch()
+        layout.addLayout(btn_layout)
+        
+        return widget
+    
+    def _create_this_month_tab(self):
+        """Create 'This Month' tab for monthly reports."""
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        
+        # Month selection
+        select_layout = QHBoxLayout()
+        
+        select_layout.addWidget(QLabel("Месяц:"))
+        self.report_month_combo = QComboBox()
+        self.report_month_combo.addItems([
+            "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+            "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"
+        ])
+        self.report_month_combo.setCurrentIndex(datetime.now().month - 1)
+        select_layout.addWidget(self.report_month_combo)
+        
+        select_layout.addWidget(QLabel("Год (опционально):"))
+        self.report_year_spin = QSpinBox()
+        self.report_year_spin.setRange(1900, 2100)
+        self.report_year_spin.setValue(0)  # 0 = all years
+        self.report_year_spin.setSpecialValueText("Все годы")
+        select_layout.addWidget(self.report_year_spin)
+        
+        self.btn_generate_report = QPushButton("📊 Сформировать отчёт")
+        self.btn_generate_report.clicked.connect(self._generate_monthly_report)
+        select_layout.addWidget(self.btn_generate_report)
+        
+        select_layout.addStretch()
+        layout.addLayout(select_layout)
+        
+        # Report output
+        self.report_text = QPlainTextEdit()
+        self.report_text.setPlaceholderText("Здесь появится отчёт...")
+        layout.addWidget(self.report_text)
+        
+        # Buttons
+        btn_layout = QHBoxLayout()
+        
+        self.btn_copy_report = QPushButton("📋 Копировать")
+        self.btn_copy_report.clicked.connect(self._copy_monthly_report)
+        btn_layout.addWidget(self.btn_copy_report)
+        
+        self.btn_save_report = QPushButton("💾 Сохранить в файл")
+        self.btn_save_report.clicked.connect(self._save_monthly_report)
+        btn_layout.addWidget(self.btn_save_report)
+        
+        self.btn_export_csv = QPushButton("📄 Экспорт CSV")
+        self.btn_export_csv.clicked.connect(self._export_monthly_csv)
+        btn_layout.addWidget(self.btn_export_csv)
         
         btn_layout.addStretch()
         layout.addLayout(btn_layout)
@@ -605,6 +667,74 @@ class MainWindow(QMainWindow):
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(text)
             self.log(f"Сохранено: {file_path}")
+    
+    def _generate_monthly_report(self):
+        """Generate monthly report."""
+        month = self.report_month_combo.currentIndex() + 1
+        year = self.report_year_spin.value()
+        
+        generator = MonthlyReportGenerator(self.db)
+        
+        if year == 0:
+            year = None  # All years
+        
+        try:
+            report = generator.generate_monthly_report(month, year)
+            
+            if report['total_events'] == 0:
+                self.report_text.setPlainText(
+                    f"Событий за {report['month_name_genitive']} не найдено."
+                )
+                return
+            
+            # Format as Telegram post
+            text = generator.format_telegram_post(report, max_events_per_year=5)
+            
+            # Store report for export
+            self._current_monthly_report = report
+            
+            self.report_text.setPlainText(text)
+            self.log(f"Отчёт сформирован: {report['total_events']} событий")
+            
+        except Exception as e:
+            QMessageBox.warning(self, "Ошибка", f"Не удалось сформировать отчёт: {e}")
+    
+    def _copy_monthly_report(self):
+        """Copy monthly report to clipboard."""
+        text = self.report_text.toPlainText()
+        QApplication.clipboard().setText(text)
+        self.log("Отчёт скопирован в буфер обмена")
+    
+    def _save_monthly_report(self):
+        """Save monthly report to file."""
+        file_path, _ = QFileDialog.getSaveFileName(
+            self, "Сохранить отчёт", f"report_{datetime.now().strftime('%Y%m')}.txt",
+            "Текстовые файлы (*.txt)"
+        )
+        if file_path:
+            text = self.report_text.toPlainText()
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(text)
+            self.log(f"Отчёт сохранён: {file_path}")
+    
+    def _export_monthly_csv(self):
+        """Export monthly report to CSV."""
+        if not hasattr(self, '_current_monthly_report'):
+            QMessageBox.warning(self, "Внимание", "Сначала сформируйте отчёт")
+            return
+        
+        file_path, _ = QFileDialog.getSaveFileName(
+            self, "Экспорт CSV", f"events_{datetime.now().strftime('%Y%m')}.csv",
+            "CSV файлы (*.csv)"
+        )
+        if file_path:
+            try:
+                generator = MonthlyReportGenerator(self.db)
+                generator.export_to_csv(self._current_monthly_report, file_path)
+                self.log(f"CSV экспортирован: {file_path}")
+                QMessageBox.information(self, "Готово", "CSV файл сохранён!")
+            except Exception as e:
+                QMessageBox.warning(self, "Ошибка", f"Не удалось экспортировать: {e}")
     
     def _export_events(self):
         """Export events to CSV/JSON."""

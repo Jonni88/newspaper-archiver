@@ -224,6 +224,33 @@ class EventRepository:
             )
             return [Event(**dict(row)) for row in cursor.fetchall()]
     
+    def get_by_month(self, month: int) -> List[Event]:
+        """Get all events for specific month (across all years)."""
+        with self.db.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """SELECT * FROM events 
+                   WHERE event_date IS NOT NULL 
+                   AND CAST(strftime('%m', event_date) AS INTEGER) = ?
+                   ORDER BY event_date""",
+                (month,)
+            )
+            return [Event(**dict(row)) for row in cursor.fetchall()]
+    
+    def get_by_year_month(self, year: int, month: int) -> List[Event]:
+        """Get events for specific year and month."""
+        with self.db.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """SELECT * FROM events 
+                   WHERE event_date IS NOT NULL 
+                   AND CAST(strftime('%Y', event_date) AS INTEGER) = ?
+                   AND CAST(strftime('%m', event_date) AS INTEGER) = ?
+                   ORDER BY event_date""",
+                (year, month)
+            )
+            return [Event(**dict(row)) for row in cursor.fetchall()]
+    
     def get_all(self, limit: int = 100) -> List[Event]:
         with self.db.get_connection() as conn:
             cursor = conn.cursor()
