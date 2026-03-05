@@ -19,6 +19,8 @@ try:
     CV2_AVAILABLE = True
 except ImportError:
     CV2_AVAILABLE = False
+    cv2 = None
+    np = None
     print("Warning: OpenCV not installed. Advanced OCR will not work.")
     print("Install: pip install opencv-python")
 
@@ -63,22 +65,22 @@ class ImagePreprocessor:
         cv2.imwrite(output_path, binary)
         return output_path
     
-    def _to_grayscale(self, img: np.ndarray) -> np.ndarray:
+    def _to_grayscale(self, img) -> any:
         """Convert to grayscale."""
         if len(img.shape) == 3:
             return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         return img
     
-    def _denoise(self, img: np.ndarray) -> np.ndarray:
+    def _denoise(self, img) -> any:
         """Apply Gaussian blur to reduce noise."""
         return cv2.GaussianBlur(img, (5, 5), 0)
     
-    def _enhance_contrast(self, img: np.ndarray) -> np.ndarray:
+    def _enhance_contrast(self, img) -> any:
         """Enhance contrast using CLAHE."""
         clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
         return clahe.apply(img)
     
-    def _adaptive_threshold(self, img: np.ndarray) -> np.ndarray:
+    def _adaptive_threshold(self, img) -> any:
         """Apply adaptive thresholding."""
         return cv2.adaptiveThreshold(
             img, 255, 
@@ -205,7 +207,7 @@ class ColumnDetector:
         
         return columns
     
-    def _validate_columns(self, img: np.ndarray, columns: List[Tuple]) -> bool:
+    def _validate_columns(self, img, columns: List[Tuple]) -> bool:
         """Check if detected columns contain reasonable amount of text."""
         _, binary = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
         
