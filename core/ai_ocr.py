@@ -1,8 +1,15 @@
 """AI OCR module using DeepSeek API or other vision models."""
 import os
 import base64
-import requests
 from typing import List, Tuple, Optional
+
+try:
+    import requests
+    REQUESTS_AVAILABLE = True
+except ImportError:
+    REQUESTS_AVAILABLE = False
+    print("Warning: requests not installed. AI OCR will not work.")
+    print("Install: pip install requests")
 
 
 class AIOCRProcessor:
@@ -53,6 +60,9 @@ class AIOCRProcessor:
     
     def _deepseek_ocr(self, image_base64: str) -> str:
         """Use DeepSeek API for OCR."""
+        if not REQUESTS_AVAILABLE:
+            return ""
+        
         url = "https://api.deepseek.com/v1/chat/completions"
         
         headers = {
@@ -93,6 +103,9 @@ class AIOCRProcessor:
     
     def _openai_ocr(self, image_base64: str) -> str:
         """Use OpenAI GPT-4 Vision for OCR."""
+        if not REQUESTS_AVAILABLE:
+            return ""
+        
         url = "https://api.openai.com/v1/chat/completions"
         
         headers = {
