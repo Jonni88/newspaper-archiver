@@ -19,6 +19,7 @@ a = Analysis(
         'db',
         'core',
         'app',
+        'requests',
     ],
     hookspath=[],
     hooksconfig={},
